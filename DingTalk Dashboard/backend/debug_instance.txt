@@ -1,0 +1,303 @@
+﻿Got access token: 1785fd7490ff3889a113...
+
+=== FULL RESPONSE ===
+{
+  "errcode": 0,
+  "errmsg": "ok",
+  "process_instance": {
+    "attached_process_instance_ids": [],
+    "biz_action": "NONE",
+    "business_id": "202512242333000588106",
+    "cc_userids": [
+      "235644590809-1421471107",
+      "3026445934-655524835",
+      "235602274046-799058772",
+      "2356013113081993725079",
+      "313018615886110192",
+      "2356082663121846954791",
+      "235637260353-508907285",
+      "66471756421581484252",
+      "235643650552-1080678987",
+      "2356003168001121867354",
+      "235643655420-1209875261",
+      "235635015624273576547",
+      "235631662010-1746060713",
+      "2356002857162553017",
+      "235644461459-1326840700",
+      "235602125048-1901129134",
+      "235600195237582003509",
+      "23562856062878957914",
+      "235607102230-1682018736",
+      "235600360815-1239042825",
+      "022467273127-1872131086",
+      "013466151420723374862",
+      "235602273866-1632825406",
+      "235631662718-259819394",
+      "235628462338-1611926255",
+      "235600186218-1733310088",
+      "2356312217171345798140",
+      "235628361630-322110693",
+      "235600204238-247215859",
+      "022509393218315250438",
+      "235619561741-1595507180",
+      "235622234146522388804",
+      "235638040863-58753004"
+    ],
+    "create_time": "2025-12-24 23:33:58",
+    "form_component_values": [
+      {
+        "component_type": "DDDateField",
+        "id": "DDDateField_WS6N6ZBAIAO0",
+        "name": "TANGGAL :",
+        "value": "2025-12-24"
+      },
+      {
+        "component_type": "DDMultiSelectField",
+        "ext_value": "[{\"label\":\"PPIC\",\"key\":\"option_0\"}]",
+        "id": "DDMultiSelectField_XOKK1ACVMJ40",
+        "name": "DITUJUKAN KEPADA :",
+        "value": "[\"PPIC\"]"
+      },
+      {
+        "component_type": "DDMultiSelectField",
+        "ext_value": "[{\"label\":\"CUTTING\",\"key\":\"option_20Z23OU4EY740\"}]",
+        "id": "DDMultiSelectField_GCBQ10YOATC0",
+        "name": "DILAPORKAN OLEH :",
+        "value": "[\"CUTTING\"]"
+      },
+      {
+        "component_type": "DDMultiSelectField",
+        "ext_value": "[{\"label\":\"LEWAT SLA  / TELAT \",\"key\":\"option_4O62RAV83L00\"}]",
+        "id": "DDMultiSelectField_1676DDCZ145C0",
+        "name": "KATEGORI :",
+        "value": "[\"LEWAT SLA  / TELAT \"]"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_XMGXPB2AKSG0",
+        "name": "NAMA PROJECT :",
+        "value": "Darwin "
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_U3GD6Q852NK0",
+        "name": "NOMOR FPPP : ",
+        "value": "049"
+      },
+      {
+        "component_type": "DDPhotoField",
+        "id": "DDPhotoField_1O636CBNH9Q80",
+        "name": "BARCODE / STIKER PRODUKSI :",
+        "value": "[\"https://static.dingtalk.com/media/lQDPIuqgq3uk1zPNBkDNBLCwX9AZ7uwUrLgJJd3d4liOAA_1200_1600.jpg\"]"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_T21VCVQN4OG0",
+        "name": "NOMOR PRODUCTION ORDER :",
+        "value": "049/12/2025"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_MPIBF8T3X4W0",
+        "name": "NAMA  ITEM / PRODUCT :",
+        "value": "All section "
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_1IQD3B954QQO0",
+        "name": "DESKRIPSI MASALAH :",
+        "value": "SLA telat cutting "
+      },
+      {
+        "component_type": "DDPhotoField",
+        "id": "DDPhotoField_1321WEO0WMCG0",
+        "name": "Picture",
+        "value": "[\"https://static.dingtalk.com/media/lQDPIucTLO_nCDPNBkDNBLCwZnPp5vXzBC4JJd31X9PKAA_1200_1600.jpg\"]"
+      },
+      {
+        "component_type": "DDAttachment",
+        "id": "DDAttachment_IVR6ECYI2E80",
+        "name": "Attachment",
+        "value": "null"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_1R8RF90KTDUO0",
+        "name": "CATATAN TAMBAHAN : ",
+        "value": "null"
+      },
+      {
+        "component_type": "DDMultiSelectField",
+        "ext_value": "[{\"label\":\"TIDAK TO\",\"key\":\"option_1\"}]",
+        "id": "DDMultiSelectField_6ZE8K3Q5RC40",
+        "name": "TO/TIDAK TO :",
+        "value": "[\"TIDAK TO\"]"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_14OQ5EIFQ0V40",
+        "name": "DETAIL MATERIAL YANG DIBUTUHKAN :",
+        "value": "All section "
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_D0ISJEMBYH",
+        "name": "URGENT , BUTUH KAPAN : ",
+        "value": "Secepatnya "
+      }
+    ],
+    "operation_records": [
+      {
+        "date": "2025-12-24 23:33:58",
+        "operation_result": "NONE",
+        "operation_type": "START_PROCESS_INSTANCE",
+        "userid": "23560419180997568880"
+      },
+      {
+        "date": "2025-12-24 23:33:58",
+        "operation_result": "NONE",
+        "operation_type": "PROCESS_CC",
+        "remark": "",
+        "userid": "23560419180997568880"
+      },
+      {
+        "date": "2025-12-26 19:50:47",
+        "operation_result": "AGREE",
+        "operation_type": "EXECUTE_TASK_NORMAL",
+        "remark": "Sla persiapan MF adanya kekurangan MF dari extrude di H+5 dan antrian coating dimana SLA di H+12 sampai persiapan warna sehingga dari target SLA sampai wh warna di H+10 menjadi H+18 sampai di wh warna",
+        "userid": "235631662718-259819394"
+      },
+      {
+        "date": "2025-12-26 19:50:51",
+        "operation_result": "AGREE",
+        "operation_type": "EXECUTE_TASK_NORMAL",
+        "remark": "brian",
+        "userid": "235631662718-259819394"
+      },
+      {
+        "date": "2025-12-26 19:50:59",
+        "operation_result": "AGREE",
+        "operation_type": "EXECUTE_TASK_NORMAL",
+        "remark": "Revisi plan harian extrude dan percepatan di area coating dengan pemberian prioritas per surat jalan di area coating",
+        "userid": "235631662718-259819394"
+      },
+      {
+        "date": "2025-12-26 19:51:10",
+        "operation_result": "AGREE",
+        "operation_type": "EXECUTE_TASK_NORMAL",
+        "remark": "Kontroling safety stok per section untuk kategori middle sampai fast moving untuk stok kebutuhan 2 minggu serta pengaturan prioritas di area coating dengan visual tanda per keranjang untuk urutan prioritas coating harian dan pengaturan pergantian warna harian antar shift",
+        "userid": "235631662718-259819394"
+      }
+    ],
+    "originator_dept_id": "1000136055",
+    "originator_dept_name": "WS-Produksi",
+    "originator_userid": "23560419180997568880",
+    "result": "agree",
+    "status": "RUNNING",
+    "tasks": [
+      {
+        "activity_id": "0486_6051",
+        "create_time": "2025-12-26 19:50:47",
+        "finish_time": "2025-12-26 19:50:52",
+        "task_result": "AGREE",
+        "task_status": "COMPLETED",
+        "taskid": "98348023251",
+        "url": "aflow.dingtalk.com?procInsId=cvsw3ZTcSdORcsRszbSLuA08541766590438\u0026taskId=98348023251\u0026businessId=202512242333000588106",
+        "userid": "235631662718-259819394"
+      },
+      {
+        "activity_id": "f152_cebe",
+        "create_time": "2025-12-24 23:33:58",
+        "finish_time": "2025-12-26 19:50:47",
+        "task_result": "AGREE",
+        "task_status": "COMPLETED",
+        "taskid": "98375792314",
+        "url": "aflow.dingtalk.com?procInsId=cvsw3ZTcSdORcsRszbSLuA08541766590438\u0026taskId=98375792314\u0026businessId=202512242333000588106",
+        "userid": "235631662718-259819394"
+      },
+      {
+        "activity_id": "c4c0_9056",
+        "create_time": "2025-12-26 19:51:00",
+        "finish_time": "2025-12-26 19:51:11",
+        "task_result": "AGREE",
+        "task_status": "COMPLETED",
+        "taskid": "98375838500",
+        "url": "aflow.dingtalk.com?procInsId=cvsw3ZTcSdORcsRszbSLuA08541766590438\u0026taskId=98375838500\u0026businessId=202512242333000588106",
+        "userid": "235631662718-259819394"
+      },
+      {
+        "activity_id": "5e63_448d",
+        "create_time": "2025-12-26 19:51:11",
+        "task_result": "NONE",
+        "task_status": "RUNNING",
+        "taskid": "98426716850",
+        "url": "aflow.dingtalk.com?procInsId=cvsw3ZTcSdORcsRszbSLuA08541766590438\u0026taskId=98426716850\u0026businessId=202512242333000588106",
+        "userid": "235600195237582003509"
+      },
+      {
+        "activity_id": "5e63_448d",
+        "create_time": "2025-12-26 19:51:11",
+        "task_result": "NONE",
+        "task_status": "RUNNING",
+        "taskid": "98426716851",
+        "url": "aflow.dingtalk.com?procInsId=cvsw3ZTcSdORcsRszbSLuA08541766590438\u0026taskId=98426716851\u0026businessId=202512242333000588106",
+        "userid": "235622234146522388804"
+      },
+      {
+        "activity_id": "c20d_31d1",
+        "create_time": "2025-12-26 19:50:52",
+        "finish_time": "2025-12-26 19:51:00",
+        "task_result": "AGREE",
+        "task_status": "COMPLETED",
+        "taskid": "98426740714",
+        "url": "aflow.dingtalk.com?procInsId=cvsw3ZTcSdORcsRszbSLuA08541766590438\u0026taskId=98426740714\u0026businessId=202512242333000588106",
+        "userid": "235631662718-259819394"
+      }
+    ],
+    "title": "Eko Prasetyo  mengirimkan NCR INTERNAL WS"
+  },
+  "request_id": "15s3f6ts5jp7l"
+}
+
+=== OPERATION RECORDS (6 items) ===
+
+--- Record 1 ---
+  date: 2025-12-24 23:33:58
+  operation_result: NONE
+  operation_type: START_PROCESS_INSTANCE
+  userid: 23560419180997568880
+
+--- Record 2 ---
+  userid: 23560419180997568880
+  date: 2025-12-24 23:33:58
+  operation_result: NONE
+  operation_type: PROCESS_CC
+  remark: 
+
+--- Record 3 ---
+  date: 2025-12-26 19:50:47
+  operation_result: AGREE
+  operation_type: EXECUTE_TASK_NORMAL
+  remark: Sla persiapan MF adanya kekurangan MF dari extrude di H+5 dan antrian coating dimana SLA di H+12 sampai persiapan warna sehingga dari target SLA sampai wh warna di H+10 menjadi H+18 sampai di wh warna
+  userid: 235631662718-259819394
+
+--- Record 4 ---
+  operation_type: EXECUTE_TASK_NORMAL
+  remark: brian
+  userid: 235631662718-259819394
+  date: 2025-12-26 19:50:51
+  operation_result: AGREE
+
+--- Record 5 ---
+  date: 2025-12-26 19:50:59
+  operation_result: AGREE
+  operation_type: EXECUTE_TASK_NORMAL
+  remark: Revisi plan harian extrude dan percepatan di area coating dengan pemberian prioritas per surat jalan di area coating
+  userid: 235631662718-259819394
+
+--- Record 6 ---
+  operation_type: EXECUTE_TASK_NORMAL
+  remark: Kontroling safety stok per section untuk kategori middle sampai fast moving untuk stok kebutuhan 2 minggu serta pengaturan prioritas di area coating dengan visual tanda per keranjang untuk urutan prioritas coating harian dan pengaturan pergantian warna harian antar shift
+  userid: 235631662718-259819394
+  date: 2025-12-26 19:51:10
+  operation_result: AGREE

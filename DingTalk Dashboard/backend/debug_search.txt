@@ -1,0 +1,254 @@
+﻿Got access token: 1785fd7490ff3889a113...
+
+Searching for approvals from 2026-01-02 to 2026-01-03
+Looking for business_id: 202601021601000554633
+
+Fetched 8 instances (total: 8)
+
+=== Found 8 instances on 2026-01-02 ===
+
+[1/8] Instance: DsOlWCfgTHmYmlAfV-9Exw08541767360721, BusinessID: 202601022132000014156, Status: TERMINATED
+[2/8] Instance: sfXspUJBQrqCjeX1XhbROg08541767348667, BusinessID: 202601021811000075236, Status: RUNNING
+[3/8] Instance: bsnlOIfgTdar-Y9Gxv4f7Q08541767346211, BusinessID: 202601021730000119629, Status: RUNNING
+[4/8] Instance: LuezsLqmSPO7HdVmH02MUg08541767340915, BusinessID: 202601021601000554633, Status: RUNNING
+
+=== FOUND TARGET BUSINESS ID ===
+Instance ID: LuezsLqmSPO7HdVmH02MUg08541767340915
+Title: Randiyatna - qc mengirimkan NCR INTERNAL WS
+Status: RUNNING
+Create Time: 2026-01-02 16:01:56
+
+Full Response:
+{
+  "errcode": 0,
+  "errmsg": "ok",
+  "process_instance": {
+    "attached_process_instance_ids": [],
+    "biz_action": "NONE",
+    "business_id": "202601021601000554633",
+    "cc_userids": [
+      "235644590809-1421471107",
+      "3026445934-655524835",
+      "235602274046-799058772",
+      "2356013113081993725079",
+      "313018615886110192",
+      "2356082663121846954791",
+      "235637260353-508907285",
+      "66471756421581484252",
+      "235643650552-1080678987",
+      "2356003168001121867354",
+      "235643655420-1209875261",
+      "235635015624273576547",
+      "235631662010-1746060713",
+      "2356002857162553017",
+      "235644461459-1326840700",
+      "235602125048-1901129134",
+      "235600195237582003509",
+      "23562856062878957914",
+      "235607102230-1682018736",
+      "235600360815-1239042825",
+      "022467273127-1872131086",
+      "013466151420723374862",
+      "235602273866-1632825406",
+      "235631662718-259819394",
+      "235628462338-1611926255",
+      "235600186218-1733310088",
+      "2356312217171345798140",
+      "235628361630-322110693",
+      "235600204238-247215859",
+      "022509393218315250438",
+      "235619561741-1595507180",
+      "235622234146522388804",
+      "235638040863-58753004"
+    ],
+    "create_time": "2026-01-02 16:01:56",
+    "form_component_values": [
+      {
+        "component_type": "DDDateField",
+        "id": "DDDateField_WS6N6ZBAIAO0",
+        "name": "TANGGAL :",
+        "value": "2026-01-02"
+      },
+      {
+        "component_type": "DDMultiSelectField",
+        "ext_value": "[{\"label\":\"KLAES\",\"key\":\"option_1\"}]",
+        "id": "DDMultiSelectField_XOKK1ACVMJ40",
+        "name": "DITUJUKAN KEPADA :",
+        "value": "[\"KLAES\"]"
+      },
+      {
+        "component_type": "DDMultiSelectField",
+        "ext_value": "[{\"label\":\"QC\",\"key\":\"option_1AYVG69S4U800\"}]",
+        "id": "DDMultiSelectField_GCBQ10YOATC0",
+        "name": "DILAPORKAN OLEH :",
+        "value": "[\"QC\"]"
+      },
+      {
+        "component_type": "DDMultiSelectField",
+        "ext_value": "[{\"label\":\"REJECT\",\"key\":\"option_YPM1YT18QOG0\"}]",
+        "id": "DDMultiSelectField_1676DDCZ145C0",
+        "name": "KATEGORI :",
+        "value": "[\"REJECT\"]"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_XMGXPB2AKSG0",
+        "name": "NAMA PROJECT :",
+        "value": "Mega"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_U3GD6Q852NK0",
+        "name": "NOMOR FPPP : ",
+        "value": "220/FPPP/AST/11/2025"
+      },
+      {
+        "component_type": "DDPhotoField",
+        "id": "DDPhotoField_1O636CBNH9Q80",
+        "name": "BARCODE / STIKER PRODUKSI :",
+        "value": "[\"https://static.dingtalk.com/media/lQDPItZgjNSnLDfNA8DNBQCwJjpj-4N2p_UJMQuKOj_jAA_1280_960.jpg\"]"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_T21VCVQN4OG0",
+        "name": "NOMOR PRODUCTION ORDER :",
+        "value": "-"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_MPIBF8T3X4W0",
+        "name": "NAMA  ITEM / PRODUCT :",
+        "value": "Astral R4\" Fixed Window"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_1IQD3B954QQO0",
+        "name": "DESKRIPSI MASALAH :",
+        "value": "Ukuran Unit tidak sesuai dengan gambar, di gambar 5992 aktual Unit 6001.  \u0026 Ukuran Detail X Section berbeda dengan total keseluruhan (yg di lingkari merah) "
+      },
+      {
+        "component_type": "DDPhotoField",
+        "id": "DDPhotoField_1321WEO0WMCG0",
+        "name": "Picture",
+        "value": "[\"https://static.dingtalk.com/media/lQDPIu8_A0-kuTfNBQDNA8CwolB6w2wOE5UJMQxAiBeqAA_960_1280.jpg\",\"https://static.dingtalk.com/media/lQDPIvZaAJkxuTfNBQDNA8CwWDhl9YHVHj8JMQxAiMGpAA_960_1280.jpg\",\"https://static.dingtalk.com/media/lQDPIuOFrjXYWjfNA8DNBQCwi_wvP8-dnyIJMQxAiMGpAg_1280_960.jpg\",\"https://static.dingtalk.com/media/lQDPIuuxhKreOTfNAyrNBDiwVP02t7EwEWcJMQxAiMGpAQ_1080_810.jpg\"]"
+      },
+      {
+        "component_type": "DDAttachment",
+        "id": "DDAttachment_IVR6ECYI2E80",
+        "name": "Attachment",
+        "value": "null"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_1R8RF90KTDUO0",
+        "name": "CATATAN TAMBAHAN : ",
+        "value": "Harap segera di perbaiki"
+      },
+      {
+        "component_type": "DDMultiSelectField",
+        "ext_value": "[{\"label\":\"TIDAK TO\",\"key\":\"option_1\"}]",
+        "id": "DDMultiSelectField_6ZE8K3Q5RC40",
+        "name": "TO/TIDAK TO :",
+        "value": "[\"TIDAK TO\"]"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_14OQ5EIFQ0V40",
+        "name": "DETAIL MATERIAL YANG DIBUTUHKAN :",
+        "value": "-"
+      },
+      {
+        "component_type": "TextareaField",
+        "id": "TextareaField_D0ISJEMBYH",
+        "name": "URGENT , BUTUH KAPAN : ",
+        "value": "-"
+      }
+    ],
+    "operation_records": [
+      {
+        "date": "2026-01-02 16:01:55",
+        "operation_result": "NONE",
+        "operation_type": "START_PROCESS_INSTANCE",
+        "userid": "2356362403641948813019"
+      },
+      {
+        "date": "2026-01-02 16:01:55",
+        "operation_result": "NONE",
+        "operation_type": "PROCESS_CC",
+        "remark": "",
+        "userid": "2356362403641948813019"
+      },
+      {
+        "attachments": [
+          {
+            "file_id": "206379722797",
+            "file_name": "220.11.JPG",
+            "file_size": "68304",
+            "file_type": "jpg"
+          }
+        ],
+        "date": "2026-01-02 17:50:07",
+        "operation_result": "NONE",
+        "operation_type": "REDIRECT_TASK",
+        "remark": "secara cutting list dari klaes sudah sesuai rumus dan gambar, cek masing2 potongan ambang",
+        "userid": "235602134065440946269"
+      },
+      {
+        "date": "2026-01-02 21:45:18",
+        "operation_result": "NONE",
+        "operation_type": "ADD_REMARK",
+        "remark": "Maaf Pak coba dihitung detail X-Section nya, apa sudah sesuai dengan total",
+        "userid": "2356362403641948813019"
+      },
+      {
+        "date": "2026-01-02 21:47:45",
+        "operation_result": "NONE",
+        "operation_type": "ADD_REMARK",
+        "remark": "Maaf Pak, coba di hitung kembali, detail X-Section dengan keseluruhan, yg di lingkari merah di bawah, apa hasilnya sama 5992 pak?  ",
+        "userid": "2356362403641948813019"
+      },
+      {
+        "date": "2026-01-02 21:49:43",
+        "operation_result": "NONE",
+        "operation_type": "ADD_REMARK",
+        "remark": "Saya dapat hasil hitungan 5988 pak, total keseluruhan yg detai X-Section. Aktual keseluruhan kan 5992 ya pak? ",
+        "userid": "2356362403641948813019"
+      },
+      {
+        "date": "2026-01-03 09:39:48",
+        "operation_result": "NONE",
+        "operation_type": "ADD_REMARK",
+        "remark": "Uk. ambang : 5992 - (44.5 (tebal kusen) x 5)/4 : 1442.4",
+        "userid": "235602134065440946269"
+      }
+    ],
+    "originator_dept_id": "1000032038",
+    "originator_dept_name": "WS-BLK",
+    "originator_userid": "2356362403641948813019",
+    "result": "",
+    "status": "RUNNING",
+    "tasks": [
+      {
+        "activity_id": "f152_cebe",
+        "create_time": "2026-01-02 17:50:07",
+        "task_result": "NONE",
+        "task_status": "RUNNING",
+        "taskid": "98475579466",
+        "url": "aflow.dingtalk.com?procInsId=LuezsLqmSPO7HdVmH02MUg08541767340915\u0026taskId=98475579466\u0026businessId=202601021601000554633",
+        "userid": "2356362403641948813019"
+      },
+      {
+        "activity_id": "f152_cebe",
+        "create_time": "2026-01-02 16:01:56",
+        "finish_time": "2026-01-02 17:50:07",
+        "task_result": "REDIRECTED",
+        "task_status": "CANCELED",
+        "taskid": "98503834176",
+        "url": "aflow.dingtalk.com?procInsId=LuezsLqmSPO7HdVmH02MUg08541767340915\u0026taskId=98503834176\u0026businessId=202601021601000554633",
+        "userid": "235602134065440946269"
+      }
+    ],
+    "title": "Randiyatna - qc mengirimkan NCR INTERNAL WS"
+  },
+  "request_id": "16l3xq3ecueys"
+}

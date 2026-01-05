@@ -1,0 +1,19 @@
+﻿
+2026/01/05 14:11:59 [31;1mC:/Users/Allure/NCR New/DingTalk Dashboard/backend/cmd/debug/main.go:43 [35;1mrecord not found
+[0m[33m[5.611ms] [34;1m[rows:0][0m SELECT * FROM "ncr_approvals" WHERE business_id = '202601021601000554633' ORDER BY "ncr_approvals"."id" LIMIT 1
+Business ID 202601021601000554633 NOT FOUND in database: record not found
+
+2026/01/05 14:11:59 [31;1mC:/Users/Allure/NCR New/DingTalk Dashboard/backend/cmd/debug/main.go:55 [35;1mrecord not found
+[0m[33m[2.151ms] [34;1m[rows:0][0m SELECT * FROM "ncr_approvals" WHERE process_instance_id = 'LuezsLqmSPO7HdVmH02MUg08541767340915' ORDER BY "ncr_approvals"."id" LIMIT 1
+
+Process Instance ID LuezsLqmSPO7HdVmH02MUg08541767340915 NOT FOUND in database: record not found
+
+
+Total records in database: 704
+
+Latest 5 records:
+[1] g_TlblKwS1-m7_pAyx9cfw08541762144361 - 202511031232000418375 - RUNNING
+[2] j8wauEfuSca7VkqCVccjaA08541762144686 - 202511031238000060932 - RUNNING
+[3] jUIMkOomQvq4jXs2hLjBHQ08541762144982 - 202511031243000024131 - RUNNING
+[4] 9O3gV8jVTHKWbWJ2MV0n2A08541762146142 - 202511031302000224417 - RUNNING
+[5] FmuZMclrSMyoV6ZYvs66Gw08541762164676 - 202511031811000161237 - RUNNING
