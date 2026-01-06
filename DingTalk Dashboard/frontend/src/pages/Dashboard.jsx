@@ -5,6 +5,8 @@ import StatsCards from '../components/Dashboard/StatsCards';
 import ApprovalTable from '../components/Dashboard/ApprovalTable';
 import Charts from '../components/Dashboard/Charts';
 import FilterPanel from '../components/Dashboard/FilterPanel';
+import ProblemRanking from '../components/Dashboard/ProblemRanking';
+import WordCloud from '../components/Dashboard/WordCloud';
 import ApprovalDetail from '../components/Dashboard/ApprovalDetail';
 import './Dashboard.css';
 
@@ -17,6 +19,18 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [selectedApproval, setSelectedApproval] = useState(null);
+
+    // Get current month date range
+    const getCurrentMonthRange = () => {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        return { start: formatDate(firstDay), end: formatDate(lastDay) };
+    };
+
+    const currentMonth = getCurrentMonthRange();
+
     const [filters, setFilters] = useState({
         search: '',
         business_id: '',
@@ -25,8 +39,8 @@ const Dashboard = () => {
         ditujukan_kepada: '',
         dilaporkan_oleh: '',
         kategori: '',
-        start_date: '',
-        end_date: '',
+        start_date: currentMonth.start,  // Default to current month
+        end_date: currentMonth.end,      // Default to current month
         page: 1,
         page_size: 10,
     });
@@ -55,11 +69,16 @@ const Dashboard = () => {
     const loadData = async () => {
         setLoading(true);
         try {
+            // Use current month as default if no date filter set
+            const effectiveStartDate = filters.start_date || currentMonth.start;
+            const effectiveEndDate = filters.end_date || currentMonth.end;
+
             // Build stats filter params (for charts to respond to ALL filters)
-            const statsParams = {};
+            const statsParams = {
+                start_date: effectiveStartDate,
+                end_date: effectiveEndDate,
+            };
             if (filters.search) statsParams.search = filters.search;
-            if (filters.start_date) statsParams.start_date = filters.start_date;
-            if (filters.end_date) statsParams.end_date = filters.end_date;
             if (filters.status) statsParams.status = filters.status;
             if (filters.department) statsParams.department = filters.department;
             if (filters.ditujukan_kepada) statsParams.ditujukan_kepada = filters.ditujukan_kepada;
@@ -116,6 +135,40 @@ const Dashboard = () => {
         setFilters(prev => ({ ...prev, page: newPage }));
     };
 
+    const [exporting, setExporting] = useState(false);
+    const handleExport = async () => {
+        setExporting(true);
+        try {
+            // Use effective dates (default to current month)
+            const exportParams = {
+                start_date: filters.start_date || currentMonth.start,
+                end_date: filters.end_date || currentMonth.end,
+            };
+            if (filters.search) exportParams.search = filters.search;
+            if (filters.status) exportParams.status = filters.status;
+            if (filters.department) exportParams.department = filters.department;
+            if (filters.ditujukan_kepada) exportParams.ditujukan_kepada = filters.ditujukan_kepada;
+            if (filters.dilaporkan_oleh) exportParams.dilaporkan_oleh = filters.dilaporkan_oleh;
+            if (filters.kategori) exportParams.kategori = filters.kategori;
+
+            const blob = await dashboardService.exportToExcel(exportParams);
+
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `NCR_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('Export failed. Please try again.');
+        }
+        setExporting(false);
+    };
+
     return (
         <div className="dashboard light-theme">
             <header className="dashboard-header">
@@ -133,11 +186,28 @@ const Dashboard = () => {
                         </svg>
                     </div>
                     <div>
-                        <h1>DingTalk Dashboard</h1>
+                        <h1>NCR Internal Dashboard</h1>
                         <p className="text-secondary text-sm">Approval workflow monitoring</p>
                     </div>
                 </div>
                 <div className="dashboard-header-right">
+                    <button className="btn btn-primary" onClick={handleExport} disabled={exporting}>
+                        {exporting ? (
+                            <>
+                                <span className="spinner"></span>
+                                Exporting...
+                            </>
+                        ) : (
+                            <>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                                Export Excel
+                            </>
+                        )}
+                    </button>
                     <button className="btn btn-secondary" onClick={handleSync} disabled={syncing}>
                         {syncing ? (
                             <>
@@ -189,7 +259,11 @@ const Dashboard = () => {
                                     end_date: filters.end_date
                                 }}
                             />
+                            <WordCloud filters={filters} />
                         </div>
+
+                        {/* Problem Ranking Section */}
+                        <ProblemRanking filters={filters} />
 
                         <section className="dashboard-section">
                             <div className="section-header">

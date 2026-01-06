@@ -2,12 +2,160 @@ package approval
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+// splitAndTrim splits a string by comma, semicolon, or slash and trims whitespace
+func splitAndTrim(s string) []string {
+	// Replace semicolons and slashes with commas for unified splitting
+	s = strings.ReplaceAll(s, ";", ",")
+	s = strings.ReplaceAll(s, "/", ",")
+
+	parts := strings.Split(s, ",")
+	var result []string
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
+// extractProductLine extracts the brand/product line from a full product name
+// e.g., "Astral AP01 Top Hung Window" -> "Astral"
+// e.g., "Crown 3T Sliding Door" -> "Crown"
+// e.g., "DOOR - Solid Panel" -> "DOOR"
+func extractProductLine(productName string) string {
+	productName = strings.TrimSpace(productName)
+	if productName == "" {
+		return ""
+	}
+
+	// Known product lines/brands to match (case-insensitive)
+	knownBrands := []string{
+		"Astral", "Crown", "Royal", "Premium", "Standard", "Elite",
+		"Classic", "Modern", "Aluminium", "Stainless", "Steel",
+		"Glass", "Wood", "PVC", "UPVC", "Kayu", "Kaca",
+	}
+
+	// Check if product name starts with a known brand
+	upperName := strings.ToUpper(productName)
+	for _, brand := range knownBrands {
+		if strings.HasPrefix(upperName, strings.ToUpper(brand)) {
+			return brand
+		}
+	}
+
+	// If no known brand, take the first word as the product line
+	// Split by space, hyphen, or underscore
+	words := strings.FieldsFunc(productName, func(r rune) bool {
+		return r == ' ' || r == '-' || r == '_'
+	})
+
+	if len(words) > 0 {
+		firstWord := strings.TrimSpace(words[0])
+		// Skip very short words or numbers
+		if len(firstWord) >= 2 && !isNumeric(firstWord) {
+			return firstWord
+		}
+		// Try second word if first is too short
+		if len(words) > 1 {
+			secondWord := strings.TrimSpace(words[1])
+			if len(secondWord) >= 2 && !isNumeric(secondWord) {
+				return secondWord
+			}
+		}
+	}
+
+	return productName
+}
+
+// isNumeric checks if a string is purely numeric
+func isNumeric(s string) bool {
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return len(s) > 0
+}
+
+// Brand code to brand name mapping
+// Based on FPPP format: XXX/FPPP/CODE/MM/YYYY where CODE is the brand identifier
+var brandCodeMapping = map[string]string{
+	"ASTA": "ASTA",
+	"AST":  "ASTRAL",
+	"ABO":  "ASTRAL",
+	"ABX":  "ASTRAL",
+	"FOR":  "FORISE",
+	"PKC":  "FORISE",
+	"RSD":  "RSD",
+	"MAX":  "ALPHAMAX",
+	"APX":  "ALPHAMAX",
+	"CAR":  "CARRA",
+	"RAE":  "ALLURE",
+	"RAS":  "ALUPLUS",
+	"HRB":  "HRB",
+	"POL":  "POLARISA",
+	// Add more mappings as needed
+}
+
+// extractBrandFromFPPP extracts brand name from FPPP/PO number
+// Format: XXX/FPPP/CODE/MM/YYYY or XXX/PP/CODE/MM/YY (with typos)
+// e.g., "011/FPPP/POL/09/2025" -> "POLARISA"
+// e.g., "003/pp/pkc/10/25" -> "FORISE"
+// e.g., "003/PM/CAR/X/2025" -> "CARRA"
+func extractBrandFromFPPP(fpppNumber string) string {
+	if fpppNumber == "" {
+		return ""
+	}
+
+	// Normalize: uppercase and trim
+	fpppNumber = strings.ToUpper(strings.TrimSpace(fpppNumber))
+
+	// Split by slash
+	parts := strings.Split(fpppNumber, "/")
+
+	// We expect format: NUMBER/FPPP_TYPE/BRAND_CODE/MONTH/YEAR
+	// The brand code is typically at position 2 (index 2) after splitting by "/"
+	// But we need to handle variations like:
+	// - 011/FPPP/POL/09/2025 (standard)
+	// - 003/PP/PKC/10/25 (short type, short year)
+	// - 003/PM/CAR/X/2025 (different type)
+
+	if len(parts) < 3 {
+		return ""
+	}
+
+	// Position 2 should be the brand code (after NUMBER and FPPP/PP/PM)
+	brandCode := strings.TrimSpace(parts[2])
+
+	// Skip if it's a number (might be date)
+	if isNumeric(brandCode) {
+		return ""
+	}
+
+	// Skip if it looks like a month (roman numerals or month numbers)
+	if len(brandCode) <= 2 || brandCode == "I" || brandCode == "II" || brandCode == "III" ||
+		brandCode == "IV" || brandCode == "V" || brandCode == "VI" || brandCode == "VII" ||
+		brandCode == "VIII" || brandCode == "IX" || brandCode == "X" || brandCode == "XI" || brandCode == "XII" {
+		return ""
+	}
+
+	// Look up the brand code in our mapping
+	if brandName, ok := brandCodeMapping[brandCode]; ok {
+		return brandName
+	}
+
+	// If not in mapping, return the code itself (uppercase)
+	return brandCode
+}
 
 // Repository handles database operations for NCR approvals
 type Repository struct {
@@ -281,20 +429,51 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 		Limit(10).
 		Scan(&deptCounts)
 
-	// Get category distribution
+	// Get category distribution (with normalization for comma-separated values)
 	type KategoriCount struct {
 		Kategori string `json:"kategori"`
 		Count    int64  `json:"count"`
 	}
-	var kategoriCounts []KategoriCount
+	var rawKategoriCounts []KategoriCount
 	kategoriQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
 		Select("kategori, count(*) as count").
 		Where("kategori IS NOT NULL AND kategori != ''")
 	applyFilters(kategoriQuery).
 		Group("kategori").
 		Order("count DESC").
-		Limit(10).
-		Scan(&kategoriCounts)
+		Scan(&rawKategoriCounts)
+
+	// Normalize comma-separated values (same as ditujukan_kepada)
+	normalizedKategori := make(map[string]int64)
+	for _, kc := range rawKategoriCounts {
+		parts := splitAndTrim(kc.Kategori)
+		for _, part := range parts {
+			if part != "" {
+				normalizedKategori[part] += kc.Count
+			}
+		}
+	}
+
+	// Convert back to slice and sort by count
+	var kategoriCounts []KategoriCount
+	for name, count := range normalizedKategori {
+		kategoriCounts = append(kategoriCounts, KategoriCount{
+			Kategori: name,
+			Count:    count,
+		})
+	}
+	// Sort by count descending
+	for i := 0; i < len(kategoriCounts)-1; i++ {
+		for j := i + 1; j < len(kategoriCounts); j++ {
+			if kategoriCounts[j].Count > kategoriCounts[i].Count {
+				kategoriCounts[i], kategoriCounts[j] = kategoriCounts[j], kategoriCounts[i]
+			}
+		}
+	}
+	// Limit to top 10
+	if len(kategoriCounts) > 10 {
+		kategoriCounts = kategoriCounts[:10]
+	}
 
 	// Get trend data - daily or monthly counts based on filter range
 	type TrendData struct {
@@ -331,17 +510,124 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 			Scan(&trendData)
 	}
 
+	// Get ditujukan kepada distribution (with normalization for comma-separated values)
+	type DitujukanCount struct {
+		DitujukanKepada string `json:"ditujukan_kepada"`
+		Count           int64  `json:"count"`
+	}
+	var rawDitujukanCounts []DitujukanCount
+	ditujukanQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
+		Select("ditujukan_kepada, count(*) as count").
+		Where("ditujukan_kepada IS NOT NULL AND ditujukan_kepada != ''")
+	applyFilters(ditujukanQuery).
+		Group("ditujukan_kepada").
+		Order("count DESC").
+		Scan(&rawDitujukanCounts)
+
+	// Normalize comma-separated values (e.g., "Klaes,RND" -> ["Klaes", "RND"])
+	normalizedCounts := make(map[string]int64)
+	for _, dc := range rawDitujukanCounts {
+		// Split by comma, semicolon, or slash
+		parts := splitAndTrim(dc.DitujukanKepada)
+		for _, part := range parts {
+			if part != "" {
+				normalizedCounts[part] += dc.Count
+			}
+		}
+	}
+
+	// Convert back to slice and sort by count
+	var ditujukanCounts []DitujukanCount
+	for name, count := range normalizedCounts {
+		ditujukanCounts = append(ditujukanCounts, DitujukanCount{
+			DitujukanKepada: name,
+			Count:           count,
+		})
+	}
+	// Sort by count descending
+	for i := 0; i < len(ditujukanCounts)-1; i++ {
+		for j := i + 1; j < len(ditujukanCounts); j++ {
+			if ditujukanCounts[j].Count > ditujukanCounts[i].Count {
+				ditujukanCounts[i], ditujukanCounts[j] = ditujukanCounts[j], ditujukanCounts[i]
+			}
+		}
+	}
+	// Limit to top 10
+	if len(ditujukanCounts) > 10 {
+		ditujukanCounts = ditujukanCounts[:10]
+	}
+
+	// Get brand distribution from FPPP number (with fallback to production order)
+	// Extract brand code from format like: 011/FPPP/POL/09/2025 -> POLARISA
+	type BrandCount struct {
+		NomorFPPP            string `gorm:"column:nomor_fppp"`
+		NomorProductionOrder string `gorm:"column:nomor_production_order"`
+		Count                int64  `json:"count"`
+	}
+	var rawBrandCounts []BrandCount
+	brandQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
+		Select("nomor_fppp, nomor_production_order, count(*) as count").
+		Where("(nomor_fppp IS NOT NULL AND nomor_fppp != '') OR (nomor_production_order IS NOT NULL AND nomor_production_order != '')")
+	applyFilters(brandQuery).
+		Group("nomor_fppp, nomor_production_order").
+		Order("count DESC").
+		Scan(&rawBrandCounts)
+
+	// Normalize by extracting brand from FPPP/PO number
+	type ItemProductCount struct {
+		NamaItemProduct string `json:"nama_item_product"`
+		Count           int64  `json:"count"`
+	}
+	normalizedItemProduct := make(map[string]int64)
+	for _, bc := range rawBrandCounts {
+		// Try FPPP first, fallback to production order
+		fpppNumber := bc.NomorFPPP
+		if fpppNumber == "" {
+			fpppNumber = bc.NomorProductionOrder
+		}
+
+		if fpppNumber != "" {
+			brand := extractBrandFromFPPP(fpppNumber)
+			if brand != "" {
+				normalizedItemProduct[brand] += bc.Count
+			}
+		}
+	}
+
+	// Convert back to slice and sort by count
+	var itemProductCounts []ItemProductCount
+	for name, count := range normalizedItemProduct {
+		itemProductCounts = append(itemProductCounts, ItemProductCount{
+			NamaItemProduct: name,
+			Count:           count,
+		})
+	}
+	// Sort by count descending
+	for i := 0; i < len(itemProductCounts)-1; i++ {
+		for j := i + 1; j < len(itemProductCounts); j++ {
+			if itemProductCounts[j].Count > itemProductCounts[i].Count {
+				itemProductCounts[i], itemProductCounts[j] = itemProductCounts[j], itemProductCounts[i]
+			}
+		}
+	}
+	// Limit to top 10
+	if len(itemProductCounts) > 10 {
+		itemProductCounts = itemProductCounts[:10]
+	}
+
 	return map[string]interface{}{
-		"total":             totalCount,
-		"running":           runningCount,
-		"completed":         completedCount,
-		"approved":          agreeCount,
-		"rejected":          refuseCount,
-		"to":                toCount,
-		"tidak_to":          tidakToCount,
-		"department_counts": deptCounts,
-		"kategori_counts":   kategoriCounts,
-		"trend_data":        trendData,
+		"total":                    totalCount,
+		"running":                  runningCount,
+		"completed":                completedCount,
+		"approved":                 agreeCount,
+		"rejected":                 refuseCount,
+		"to":                       toCount,
+		"tidak_to":                 tidakToCount,
+		"department_counts":        deptCounts,
+		"kategori_counts":          kategoriCounts,
+		"ditujukan_kepada_counts":  ditujukanCounts,
+		"nama_item_product_counts": itemProductCounts,
+		"trend_data":               trendData,
 	}, nil
 }
 

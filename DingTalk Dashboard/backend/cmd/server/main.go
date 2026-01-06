@@ -12,6 +12,7 @@ import (
 	"dingtalk-dashboard/internal/domain/approval"
 	"dingtalk-dashboard/internal/handler"
 	"dingtalk-dashboard/internal/middleware"
+	"dingtalk-dashboard/internal/ranking"
 	"dingtalk-dashboard/internal/scheduler"
 
 	"github.com/gofiber/fiber/v2"
@@ -79,6 +80,9 @@ func main() {
 	// Initialize handlers
 	approvalHandler := handler.NewApprovalHandler(approvalService, syncScheduler)
 	authHandler := handler.NewAuthHandler(cfg.AuthAPIBaseURL)
+	rankingService := ranking.NewService(db)
+	rankingHandler := handler.NewRankingHandler(rankingService)
+	exportHandler := handler.NewExportHandler(approvalService)
 
 	// Determine JWT secret (prefer JWT_ACCESS_SECRET, fallback to JWT_SECRET)
 	jwtSecret := cfg.JWTAccessSecret
@@ -106,6 +110,10 @@ func main() {
 	approvals.Get("/", approvalHandler.ListApprovals)
 	approvals.Get("/stats", approvalHandler.GetStats)
 	approvals.Get("/filter-options", approvalHandler.GetFilterOptions)
+	approvals.Get("/problem-ranking", rankingHandler.GetProblemRanking)
+	approvals.Get("/word-cloud", rankingHandler.GetWordCloud)
+	approvals.Get("/ranking-debug", rankingHandler.GetRankingDebug)
+	approvals.Get("/export", exportHandler.ExportApprovals)
 	approvals.Get("/:id", approvalHandler.GetApproval)
 
 	// Sync routes (protected)

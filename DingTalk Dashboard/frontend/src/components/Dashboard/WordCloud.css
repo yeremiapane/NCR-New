@@ -1,0 +1,150 @@
+/* Word Cloud Chart - Bubble Style */
+.word-cloud-card {
+    min-height: 320px;
+}
+
+.word-cloud-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 250px;
+    color: #64748b;
+    gap: 12px;
+}
+
+.word-cloud-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 250px;
+    color: #94a3b8;
+}
+
+.word-cloud-container {
+    padding: 16px;
+    height: 260px;
+    overflow: hidden;
+}
+
+.word-cloud-bubble {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Bubble Word Style */
+.word-bubble {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    cursor: default;
+    animation: bubbleIn 0.4s ease forwards;
+    opacity: 0;
+    transform: scale(0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+}
+
+.word-bubble:hover {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.word-text {
+    white-space: nowrap;
+}
+
+.word-count {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+/* Size Classes */
+.word-xl {
+    font-size: 16px;
+    padding: 10px 18px;
+}
+
+.word-xl .word-count {
+    font-size: 12px;
+    padding: 3px 8px;
+}
+
+.word-lg {
+    font-size: 14px;
+    padding: 8px 14px;
+}
+
+.word-md {
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+.word-sm {
+    font-size: 11px;
+    padding: 5px 10px;
+}
+
+.word-xs {
+    font-size: 10px;
+    padding: 4px 8px;
+}
+
+.word-xs .word-count {
+    display: none;
+}
+
+@keyframes bubbleIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) rotate(-15deg);
+    }
+
+    50% {
+        transform: scale(1.1) rotate(3deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.word-count-badge {
+    font-size: 12px;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .word-cloud-container {
+        height: 200px;
+    }
+
+    .word-cloud-bubble {
+        gap: 6px;
+    }
+
+    .word-xl {
+        font-size: 14px;
+    }
+
+    .word-lg {
+        font-size: 12px;
+    }
+}

@@ -56,9 +56,30 @@ export const dashboardService = {
         return response.data;
     },
 
+    // Get problem ranking (top 6 using trigram + RPN algorithm)
+    getProblemRanking: async (params = {}) => {
+        const response = await dashboardApi.get('/approvals/problem-ranking', { params });
+        return response.data;
+    },
+
+    // Get word cloud data
+    getWordCloud: async (params = {}) => {
+        const response = await dashboardApi.get('/approvals/word-cloud', { params });
+        return response.data;
+    },
+
     // Get sync logs
     getSyncLogs: async (params = {}) => {
         const response = await dashboardApi.get('/sync/logs', { params });
+        return response.data;
+    },
+
+    // Export to Excel (returns blob)
+    exportToExcel: async (params = {}) => {
+        const response = await dashboardApi.get('/approvals/export', {
+            params,
+            responseType: 'blob',
+        });
         return response.data;
     },
 

@@ -34,6 +34,8 @@ const chartColors = {
     warning: '#f59e0b',
     error: '#ef4444',
     info: '#3b82f6',
+    purple: '#a855f7',
+    pink: '#ec4899',
 };
 
 // Light theme chart colors
@@ -45,10 +47,19 @@ const lightTheme = {
     tooltipText: '#334155',
 };
 
-// Format month label from YYYY-MM to readable format
-const formatMonthLabel = (monthStr) => {
-    if (!monthStr) return '';
-    const [year, month] = monthStr.split('-');
+// Smart date label formatter - handles both YYYY-MM and YYYY-MM-DD
+const formatDateLabel = (dateStr) => {
+    if (!dateStr) return '';
+
+    // Check if it's a daily format (YYYY-MM-DD)
+    if (dateStr.length === 10 && dateStr.includes('-')) {
+        const date = new Date(dateStr);
+        // Format as "Jan 5" for daily data
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    // Monthly format (YYYY-MM)
+    const [year, month] = dateStr.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1);
     return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 };
@@ -87,9 +98,54 @@ const Charts = ({ stats, dateFilter }) => {
         ],
     };
 
-    // Use real trend data from backend
+    // Ditujukan Kepada distribution data (normalized)
+    const ditujukanCounts = stats.ditujukan_kepada_counts || [];
+    const ditujukanData = {
+        labels: ditujukanCounts.map(d => d.ditujukan_kepada || 'Unknown').slice(0, 8),
+        datasets: [
+            {
+                label: 'NCR Count',
+                data: ditujukanCounts.map(d => d.count).slice(0, 8),
+                backgroundColor: chartColors.purple,
+                borderRadius: 6,
+                maxBarThickness: 40,
+            },
+        ],
+    };
+
+    // Kategori distribution data (normalized)
+    const kategoriCounts = stats.kategori_counts || [];
+    const kategoriData = {
+        labels: kategoriCounts.map(d => d.kategori || 'Unknown').slice(0, 8),
+        datasets: [
+            {
+                label: 'NCR Count',
+                data: kategoriCounts.map(d => d.count).slice(0, 8),
+                backgroundColor: chartColors.pink,
+                borderRadius: 6,
+                maxBarThickness: 40,
+            },
+        ],
+    };
+
+    // Nama Item Product distribution data (normalized)
+    const itemProductCounts = stats.nama_item_product_counts || [];
+    const itemProductData = {
+        labels: itemProductCounts.map(d => d.nama_item_product || 'Unknown').slice(0, 8),
+        datasets: [
+            {
+                label: 'NCR Count',
+                data: itemProductCounts.map(d => d.count).slice(0, 8),
+                backgroundColor: '#06b6d4', // cyan
+                borderRadius: 6,
+                maxBarThickness: 40,
+            },
+        ],
+    };
+
+    // Use real trend data from backend with smart formatting
     const rawTrendData = stats.trend_data || [];
-    const trendLabels = rawTrendData.map(d => formatMonthLabel(d.month));
+    const trendLabels = rawTrendData.map(d => formatDateLabel(d.month));
     const trendCounts = rawTrendData.map(d => d.count);
 
     const trendData = {
@@ -164,10 +220,11 @@ const Charts = ({ stats, dateFilter }) => {
             x: {
                 grid: {
                     color: lightTheme.gridColor,
+                    drawBorder: false,
                 },
                 ticks: {
                     color: lightTheme.textColor,
-                    font: { size: 12 },
+                    font: { size: 11 },
                 },
             },
             y: {
@@ -209,6 +266,7 @@ const Charts = ({ stats, dateFilter }) => {
                     color: lightTheme.textColor,
                     font: { size: 11 },
                     maxRotation: 45,
+                    minRotation: 0,
                 },
             },
             y: {
@@ -218,22 +276,20 @@ const Charts = ({ stats, dateFilter }) => {
                 },
                 ticks: {
                     color: lightTheme.textColor,
-                    font: { size: 12 },
+                    font: { size: 11 },
+                    stepSize: 1,
                 },
                 beginAtZero: true,
             },
         },
     };
 
-    // Calculate date range display text
+    // Get date range text
     const getDateRangeText = () => {
-        if (hasDateFilter && dateFilter.start_date && dateFilter.end_date) {
-            return `${dateFilter.start_date} - ${dateFilter.end_date}`;
-        }
-        if (rawTrendData.length > 0) {
-            const first = rawTrendData[0]?.month;
-            const last = rawTrendData[rawTrendData.length - 1]?.month;
-            return `${formatMonthLabel(first)} - ${formatMonthLabel(last)}`;
+        if (dateFilter?.start_date && dateFilter?.end_date) {
+            const start = new Date(dateFilter.start_date);
+            const end = new Date(dateFilter.end_date);
+            return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
         }
         return 'All Time';
     };
@@ -288,8 +344,63 @@ const Charts = ({ stats, dateFilter }) => {
                     )}
                 </div>
             </div>
+
+            <div className="chart-card light animate-fade-in" style={{ animationDelay: '0.15s' }}>
+                <div className="chart-card-header">
+                    <h3>Ditujukan Kepada</h3>
+                    {hasDateFilter && (
+                        <span className="date-filter-badge">Filtered</span>
+                    )}
+                </div>
+                <div className="chart-container chart-bar">
+                    {ditujukanCounts.length > 0 ? (
+                        <Bar data={ditujukanData} options={barOptions} />
+                    ) : (
+                        <div className="chart-empty">
+                            <p className="text-muted">No data available</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="chart-card light animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                <div className="chart-card-header">
+                    <h3>Kategori</h3>
+                    {hasDateFilter && (
+                        <span className="date-filter-badge">Filtered</span>
+                    )}
+                </div>
+                <div className="chart-container chart-bar">
+                    {kategoriCounts.length > 0 ? (
+                        <Bar data={kategoriData} options={barOptions} />
+                    ) : (
+                        <div className="chart-empty">
+                            <p className="text-muted">No data available</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="chart-card light animate-fade-in" style={{ animationDelay: '0.25s' }}>
+                <div className="chart-card-header">
+                    <h3>Brand (by FPPP)</h3>
+                    {hasDateFilter && (
+                        <span className="date-filter-badge">Filtered</span>
+                    )}
+                </div>
+                <div className="chart-container chart-bar">
+                    {itemProductCounts.length > 0 ? (
+                        <Bar data={itemProductData} options={barOptions} />
+                    ) : (
+                        <div className="chart-empty">
+                            <p className="text-muted">No data available</p>
+                        </div>
+                    )}
+                </div>
+            </div>
         </>
     );
 };
 
 export default Charts;
+
