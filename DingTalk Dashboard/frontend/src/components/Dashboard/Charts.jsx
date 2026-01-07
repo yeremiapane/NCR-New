@@ -143,6 +143,56 @@ const Charts = ({ stats, dateFilter }) => {
         ],
     };
 
+    // Brand TO/Non-TO Analysis (Material Loss Matrix)
+    const brandTOAnalysis = stats.brand_to_analysis || [];
+    const brandTOData = {
+        labels: brandTOAnalysis.map(d => d.brand).slice(0, 8),
+        datasets: [
+            {
+                label: 'TO (Material Loss)',
+                data: brandTOAnalysis.map(d => d.to).slice(0, 8),
+                backgroundColor: '#ef4444', // red
+                borderRadius: 4,
+                maxBarThickness: 35,
+            },
+            {
+                label: 'Non-TO (Rework)',
+                data: brandTOAnalysis.map(d => d.non_to).slice(0, 8),
+                backgroundColor: '#f59e0b', // yellow
+                borderRadius: 4,
+                maxBarThickness: 35,
+            },
+        ],
+    };
+
+    // Brand vs Kategori Matrix
+    const brandKategoriMatrix = stats.brand_kategori_matrix || { brands: [], categories: [] };
+    const kategoriColors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+    const brandKategoriData = {
+        labels: brandKategoriMatrix.brands?.map(d => d.brand).slice(0, 8) || [],
+        datasets: (brandKategoriMatrix.categories || []).slice(0, 6).map((kat, idx) => ({
+            label: kat,
+            data: brandKategoriMatrix.brands?.map(d => d.categories?.[kat] || 0).slice(0, 8) || [],
+            backgroundColor: kategoriColors[idx % kategoriColors.length],
+            borderRadius: 4,
+            maxBarThickness: 35,
+        })),
+    };
+
+    // Brand vs Ditujukan Kepada Matrix
+    const brandDitujukanMatrix = stats.brand_ditujukan_matrix || { brands: [], ditujukan: [] };
+    const ditujukanColors = ['#3b82f6', '#22c55e', '#eab308', '#f97316', '#a855f7', '#14b8a6', '#f43f5e', '#6366f1'];
+    const brandDitujukanData = {
+        labels: brandDitujukanMatrix.brands?.map(d => d.brand).slice(0, 8) || [],
+        datasets: (brandDitujukanMatrix.ditujukan || []).slice(0, 6).map((dit, idx) => ({
+            label: dit,
+            data: brandDitujukanMatrix.brands?.map(d => d.ditujukan?.[dit] || 0).slice(0, 8) || [],
+            backgroundColor: ditujukanColors[idx % ditujukanColors.length],
+            borderRadius: 4,
+            maxBarThickness: 35,
+        })),
+    };
+
     // Use real trend data from backend with smart formatting
     const rawTrendData = stats.trend_data || [];
     const trendLabels = rawTrendData.map(d => formatDateLabel(d.month));
@@ -284,6 +334,74 @@ const Charts = ({ stats, dateFilter }) => {
         },
     };
 
+    // Stacked bar chart options
+    const stackedBarOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: lightTheme.textColor,
+                    padding: 12,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    font: { size: 11 },
+                },
+            },
+            tooltip: {
+                backgroundColor: lightTheme.tooltipBg,
+                titleColor: lightTheme.tooltipText,
+                bodyColor: lightTheme.textColor,
+                borderColor: lightTheme.tooltipBorder,
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                    label: function (context) {
+                        const dataset = context.dataset;
+                        const dataIndex = context.dataIndex;
+                        const value = dataset.data[dataIndex];
+                        // Calculate total for this bar
+                        let total = 0;
+                        context.chart.data.datasets.forEach(ds => {
+                            total += ds.data[dataIndex] || 0;
+                        });
+                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                        return `${dataset.label}: ${value} (${percentage}%)`;
+                    }
+                }
+            },
+        },
+        scales: {
+            x: {
+                stacked: true,
+                grid: {
+                    color: lightTheme.gridColor,
+                    drawBorder: false,
+                },
+                ticks: {
+                    color: lightTheme.textColor,
+                    font: { size: 11 },
+                    maxRotation: 45,
+                    minRotation: 0,
+                },
+            },
+            y: {
+                stacked: true,
+                grid: {
+                    color: lightTheme.gridColor,
+                    drawBorder: false,
+                },
+                ticks: {
+                    color: lightTheme.textColor,
+                    font: { size: 11 },
+                },
+                beginAtZero: true,
+            },
+        },
+    };
+
     // Get date range text
     const getDateRangeText = () => {
         if (dateFilter?.start_date && dateFilter?.end_date) {
@@ -391,6 +509,63 @@ const Charts = ({ stats, dateFilter }) => {
                 <div className="chart-container chart-bar">
                     {itemProductCounts.length > 0 ? (
                         <Bar data={itemProductData} options={barOptions} />
+                    ) : (
+                        <div className="chart-empty">
+                            <p className="text-muted">No data available</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Material Loss Matrix (TO vs Non-TO per Brand) */}
+            <div className="chart-card light animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                <div className="chart-card-header">
+                    <h3>Material Loss Matrix (TO vs Non-TO)</h3>
+                    {hasDateFilter && (
+                        <span className="date-filter-badge">Filtered</span>
+                    )}
+                </div>
+                <div className="chart-container chart-bar">
+                    {brandTOAnalysis.length > 0 ? (
+                        <Bar data={brandTOData} options={stackedBarOptions} />
+                    ) : (
+                        <div className="chart-empty">
+                            <p className="text-muted">No data available</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Brand vs Kategori Matrix */}
+            <div className="chart-card light animate-fade-in" style={{ animationDelay: '0.35s' }}>
+                <div className="chart-card-header">
+                    <h3>Brand vs Kategori</h3>
+                    {hasDateFilter && (
+                        <span className="date-filter-badge">Filtered</span>
+                    )}
+                </div>
+                <div className="chart-container chart-bar">
+                    {brandKategoriMatrix.brands?.length > 0 ? (
+                        <Bar data={brandKategoriData} options={stackedBarOptions} />
+                    ) : (
+                        <div className="chart-empty">
+                            <p className="text-muted">No data available</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Brand vs Ditujukan Kepada Matrix */}
+            <div className="chart-card light animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <div className="chart-card-header">
+                    <h3>Brand vs Target Dept</h3>
+                    {hasDateFilter && (
+                        <span className="date-filter-badge">Filtered</span>
+                    )}
+                </div>
+                <div className="chart-container chart-bar">
+                    {brandDitujukanMatrix.brands?.length > 0 ? (
+                        <Bar data={brandDitujukanData} options={stackedBarOptions} />
                     ) : (
                         <div className="chart-empty">
                             <p className="text-muted">No data available</p>

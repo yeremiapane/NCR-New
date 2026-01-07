@@ -14,8 +14,7 @@ import (
 func splitAndTrim(s string) []string {
 	// Replace semicolons and slashes with commas for unified splitting
 	s = strings.ReplaceAll(s, ";", ",")
-	s = strings.ReplaceAll(s, "/", ",")
-
+	
 	parts := strings.Split(s, ",")
 	var result []string
 	for _, p := range parts {
@@ -25,55 +24,6 @@ func splitAndTrim(s string) []string {
 		}
 	}
 	return result
-}
-
-// extractProductLine extracts the brand/product line from a full product name
-// e.g., "Astral AP01 Top Hung Window" -> "Astral"
-// e.g., "Crown 3T Sliding Door" -> "Crown"
-// e.g., "DOOR - Solid Panel" -> "DOOR"
-func extractProductLine(productName string) string {
-	productName = strings.TrimSpace(productName)
-	if productName == "" {
-		return ""
-	}
-
-	// Known product lines/brands to match (case-insensitive)
-	knownBrands := []string{
-		"Astral", "Crown", "Royal", "Premium", "Standard", "Elite",
-		"Classic", "Modern", "Aluminium", "Stainless", "Steel",
-		"Glass", "Wood", "PVC", "UPVC", "Kayu", "Kaca",
-	}
-
-	// Check if product name starts with a known brand
-	upperName := strings.ToUpper(productName)
-	for _, brand := range knownBrands {
-		if strings.HasPrefix(upperName, strings.ToUpper(brand)) {
-			return brand
-		}
-	}
-
-	// If no known brand, take the first word as the product line
-	// Split by space, hyphen, or underscore
-	words := strings.FieldsFunc(productName, func(r rune) bool {
-		return r == ' ' || r == '-' || r == '_'
-	})
-
-	if len(words) > 0 {
-		firstWord := strings.TrimSpace(words[0])
-		// Skip very short words or numbers
-		if len(firstWord) >= 2 && !isNumeric(firstWord) {
-			return firstWord
-		}
-		// Try second word if first is too short
-		if len(words) > 1 {
-			secondWord := strings.TrimSpace(words[1])
-			if len(secondWord) >= 2 && !isNumeric(secondWord) {
-				return secondWord
-			}
-		}
-	}
-
-	return productName
 }
 
 // isNumeric checks if a string is purely numeric
@@ -677,6 +627,221 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 		itemProductCounts = itemProductCounts[:10]
 	}
 
+	// Get Brand vs TO/Non-TO analysis (Material Loss Matrix)
+	type BrandTOData struct {
+		NomorFPPP string `gorm:"column:nomor_fppp"`
+		NomorPO   string `gorm:"column:nomor_production_order"`
+		ToTidakTo string `gorm:"column:to_tidak_to"`
+		Count     int64  `json:"count"`
+	}
+	var rawBrandTOData []BrandTOData
+	brandTOQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
+		Select("nomor_fppp, nomor_production_order, to_tidak_to, count(*) as count").
+		Where("(nomor_fppp IS NOT NULL AND nomor_fppp != '') OR (nomor_production_order IS NOT NULL AND nomor_production_order != '')")
+	excludeTerminated(applyFilters(brandTOQuery)).
+		Group("nomor_fppp, nomor_production_order, to_tidak_to").
+		Scan(&rawBrandTOData)
+
+	// Aggregate by brand and TO/Non-TO
+	brandTOMap := make(map[string]map[string]int64) // brand -> {TO: count, Non-TO: count}
+	for _, item := range rawBrandTOData {
+		fppp := item.NomorFPPP
+		if fppp == "" {
+			fppp = item.NomorPO
+		}
+		brand := extractBrandFromFPPP(fppp)
+		if brand == "" {
+			continue
+		}
+		if brandTOMap[brand] == nil {
+			brandTOMap[brand] = make(map[string]int64)
+		}
+		// Normalize TO/Non-TO values
+		toValue := strings.ToUpper(strings.TrimSpace(item.ToTidakTo))
+		if strings.Contains(toValue, "TIDAK") {
+			brandTOMap[brand]["Non-TO"] += item.Count
+		} else if strings.Contains(toValue, "TO") {
+			brandTOMap[brand]["TO"] += item.Count
+		}
+	}
+	// Convert to array format for frontend
+	type BrandTOAnalysis struct {
+		Brand string `json:"brand"`
+		TO    int64  `json:"to"`
+		NonTO int64  `json:"non_to"`
+	}
+	var brandTOAnalysis []BrandTOAnalysis
+	for brand, counts := range brandTOMap {
+		brandTOAnalysis = append(brandTOAnalysis, BrandTOAnalysis{
+			Brand: brand,
+			TO:    counts["TO"],
+			NonTO: counts["Non-TO"],
+		})
+	}
+	// Sort by total count descending
+	for i := 0; i < len(brandTOAnalysis)-1; i++ {
+		for j := i + 1; j < len(brandTOAnalysis); j++ {
+			totalI := brandTOAnalysis[i].TO + brandTOAnalysis[i].NonTO
+			totalJ := brandTOAnalysis[j].TO + brandTOAnalysis[j].NonTO
+			if totalJ > totalI {
+				brandTOAnalysis[i], brandTOAnalysis[j] = brandTOAnalysis[j], brandTOAnalysis[i]
+			}
+		}
+	}
+	if len(brandTOAnalysis) > 10 {
+		brandTOAnalysis = brandTOAnalysis[:10]
+	}
+
+	// Get Brand vs Kategori matrix
+	type BrandKategoriData struct {
+		NomorFPPP string `gorm:"column:nomor_fppp"`
+		NomorPO   string `gorm:"column:nomor_production_order"`
+		Kategori  string `gorm:"column:kategori"`
+		Count     int64  `json:"count"`
+	}
+	var rawBrandKategoriData []BrandKategoriData
+	brandKategoriQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
+		Select("nomor_fppp, nomor_production_order, kategori, count(*) as count").
+		Where("kategori IS NOT NULL AND kategori != ''").
+		Where("(nomor_fppp IS NOT NULL AND nomor_fppp != '') OR (nomor_production_order IS NOT NULL AND nomor_production_order != '')")
+	excludeTerminated(applyFilters(brandKategoriQuery)).
+		Group("nomor_fppp, nomor_production_order, kategori").
+		Scan(&rawBrandKategoriData)
+
+	// Aggregate by brand and kategori (with normalization)
+	brandKategoriMap := make(map[string]map[string]int64)
+	allKategori := make(map[string]bool)
+	for _, item := range rawBrandKategoriData {
+		fppp := item.NomorFPPP
+		if fppp == "" {
+			fppp = item.NomorPO
+		}
+		brand := extractBrandFromFPPP(fppp)
+		if brand == "" {
+			continue
+		}
+		if brandKategoriMap[brand] == nil {
+			brandKategoriMap[brand] = make(map[string]int64)
+		}
+		// Normalize kategori (split comma-separated)
+		parts := splitAndTrim(item.Kategori)
+		for _, kat := range parts {
+			if kat != "" {
+				brandKategoriMap[brand][kat] += item.Count
+				allKategori[kat] = true
+			}
+		}
+	}
+	// Convert to frontend format
+	type BrandKategoriMatrix struct {
+		Brand      string           `json:"brand"`
+		Categories map[string]int64 `json:"categories"`
+		Total      int64            `json:"total"`
+	}
+	var brandKategoriMatrix []BrandKategoriMatrix
+	for brand, categories := range brandKategoriMap {
+		var total int64
+		for _, count := range categories {
+			total += count
+		}
+		brandKategoriMatrix = append(brandKategoriMatrix, BrandKategoriMatrix{
+			Brand:      brand,
+			Categories: categories,
+			Total:      total,
+		})
+	}
+	// Sort by total descending
+	for i := 0; i < len(brandKategoriMatrix)-1; i++ {
+		for j := i + 1; j < len(brandKategoriMatrix); j++ {
+			if brandKategoriMatrix[j].Total > brandKategoriMatrix[i].Total {
+				brandKategoriMatrix[i], brandKategoriMatrix[j] = brandKategoriMatrix[j], brandKategoriMatrix[i]
+			}
+		}
+	}
+	if len(brandKategoriMatrix) > 10 {
+		brandKategoriMatrix = brandKategoriMatrix[:10]
+	}
+	// Get unique kategori list
+	var kategoriList []string
+	for kat := range allKategori {
+		kategoriList = append(kategoriList, kat)
+	}
+
+	// Get Brand vs Ditujukan Kepada matrix
+	type BrandDitujukanData struct {
+		NomorFPPP       string `gorm:"column:nomor_fppp"`
+		NomorPO         string `gorm:"column:nomor_production_order"`
+		DitujukanKepada string `gorm:"column:ditujukan_kepada"`
+		Count           int64  `json:"count"`
+	}
+	var rawBrandDitujukanData []BrandDitujukanData
+	brandDitujukanQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
+		Select("nomor_fppp, nomor_production_order, ditujukan_kepada, count(*) as count").
+		Where("ditujukan_kepada IS NOT NULL AND ditujukan_kepada != ''").
+		Where("(nomor_fppp IS NOT NULL AND nomor_fppp != '') OR (nomor_production_order IS NOT NULL AND nomor_production_order != '')")
+	excludeTerminated(applyFilters(brandDitujukanQuery)).
+		Group("nomor_fppp, nomor_production_order, ditujukan_kepada").
+		Scan(&rawBrandDitujukanData)
+
+	// Aggregate by brand and ditujukan kepada (with normalization)
+	brandDitujukanMap := make(map[string]map[string]int64)
+	allDitujukan := make(map[string]bool)
+	for _, item := range rawBrandDitujukanData {
+		fppp := item.NomorFPPP
+		if fppp == "" {
+			fppp = item.NomorPO
+		}
+		brand := extractBrandFromFPPP(fppp)
+		if brand == "" {
+			continue
+		}
+		if brandDitujukanMap[brand] == nil {
+			brandDitujukanMap[brand] = make(map[string]int64)
+		}
+		// Normalize ditujukan kepada (split comma-separated)
+		parts := splitAndTrim(item.DitujukanKepada)
+		for _, dit := range parts {
+			if dit != "" {
+				brandDitujukanMap[brand][dit] += item.Count
+				allDitujukan[dit] = true
+			}
+		}
+	}
+	// Convert to frontend format
+	type BrandDitujukanMatrix struct {
+		Brand     string           `json:"brand"`
+		Ditujukan map[string]int64 `json:"ditujukan"`
+		Total     int64            `json:"total"`
+	}
+	var brandDitujukanMatrix []BrandDitujukanMatrix
+	for brand, ditujukan := range brandDitujukanMap {
+		var total int64
+		for _, count := range ditujukan {
+			total += count
+		}
+		brandDitujukanMatrix = append(brandDitujukanMatrix, BrandDitujukanMatrix{
+			Brand:     brand,
+			Ditujukan: ditujukan,
+			Total:     total,
+		})
+	}
+	// Sort by total descending
+	for i := 0; i < len(brandDitujukanMatrix)-1; i++ {
+		for j := i + 1; j < len(brandDitujukanMatrix); j++ {
+			if brandDitujukanMatrix[j].Total > brandDitujukanMatrix[i].Total {
+				brandDitujukanMatrix[i], brandDitujukanMatrix[j] = brandDitujukanMatrix[j], brandDitujukanMatrix[i]
+			}
+		}
+	}
+	if len(brandDitujukanMatrix) > 10 {
+		brandDitujukanMatrix = brandDitujukanMatrix[:10]
+	}
+	// Get unique ditujukan list
+	var ditujukanList []string
+	for dit := range allDitujukan {
+		ditujukanList = append(ditujukanList, dit)
+	}
+
 	return map[string]interface{}{
 		"total":                    totalCount,
 		"running":                  runningCount,
@@ -691,6 +856,15 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 		"ditujukan_kepada_counts":  ditujukanCounts,
 		"nama_item_product_counts": itemProductCounts,
 		"trend_data":               trendData,
+		"brand_to_analysis":        brandTOAnalysis,
+		"brand_kategori_matrix": map[string]interface{}{
+			"brands":     brandKategoriMatrix,
+			"categories": kategoriList,
+		},
+		"brand_ditujukan_matrix": map[string]interface{}{
+			"brands":    brandDitujukanMatrix,
+			"ditujukan": ditujukanList,
+		},
 	}, nil
 }
 

@@ -159,12 +159,12 @@ const ProblemRanking = ({ filters }) => {
                 </div>
             )}
 
-            <div className="algorithm-info">
+            {/* <div className="algorithm-info">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
                 </svg>
                 <span>Trigram + LCS Similarity | Weighted RPN | Centroid Selection</span>
-            </div>
+            </div> */}
         </div>
     );
 };
