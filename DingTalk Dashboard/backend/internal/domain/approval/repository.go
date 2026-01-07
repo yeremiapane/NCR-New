@@ -253,8 +253,29 @@ func (r *Repository) ListApprovals(ctx context.Context, params ListParams) ([]NC
 		query = query.Where("to_tidak_to = ?", params.ToTidakTo)
 	}
 	if params.Search != "" {
-		query = query.Where("title ILIKE ? OR originator_name ILIKE ? OR nama_project ILIKE ? OR nomor_fppp ILIKE ? OR business_id ILIKE ?",
-			"%"+params.Search+"%", "%"+params.Search+"%", "%"+params.Search+"%", "%"+params.Search+"%", "%"+params.Search+"%")
+		searchTerm := "%" + params.Search + "%"
+		query = query.Where(
+			"title ILIKE ? OR "+
+				"originator_name ILIKE ? OR "+
+				"nama_project ILIKE ? OR "+
+				"nomor_fppp ILIKE ? OR "+
+				"business_id ILIKE ? OR "+
+				"deskripsi_masalah ILIKE ? OR "+
+				"ditujukan_kepada ILIKE ? OR "+
+				"dilaporkan_oleh ILIKE ? OR "+
+				"kategori ILIKE ? OR "+
+				"nama_item_product ILIKE ? OR "+
+				"nomor_production_order ILIKE ? OR "+
+				"catatan_tambahan ILIKE ? OR "+
+				"analisis_penyebab_masalah ILIKE ? OR "+
+				"tindakan_perbaikan ILIKE ? OR "+
+				"tindakan_pencegahan ILIKE ? OR "+
+				"remark_comment ILIKE ?",
+			searchTerm, searchTerm, searchTerm, searchTerm, searchTerm,
+			searchTerm, searchTerm, searchTerm, searchTerm, searchTerm,
+			searchTerm, searchTerm, searchTerm, searchTerm, searchTerm,
+			searchTerm,
+		)
 	}
 	if params.StartDate != nil {
 		query = query.Where("tanggal >= ?", params.StartDate)
@@ -403,31 +424,72 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 	var completedCount int64
 	var agreeCount int64
 	var refuseCount int64
+	var terminatedCount int64
 	var toCount int64
 	var tidakToCount int64
 
+	// Count all records
 	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{})).Count(&totalCount)
 	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{}).Where("status = ?", "RUNNING")).Count(&runningCount)
 	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{}).Where("status = ?", "COMPLETED")).Count(&completedCount)
+	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{}).Where("status = ?", "TERMINATED")).Count(&terminatedCount)
 	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{}).Where("result = ?", "agree")).Count(&agreeCount)
-	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{}).Where("result = ?", "refuse")).Count(&refuseCount)
+	// Refuse count: check both result='refuse' AND status='TERMINATED' (terminated means rejected)
+	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{}).Where("result = ? OR status = ?", "refuse", "TERMINATED")).Count(&refuseCount)
 	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{}).Where("to_tidak_to ILIKE ?", "%TO%").Where("to_tidak_to NOT ILIKE ?", "%TIDAK%")).Count(&toCount)
 	applyFilters(r.db.WithContext(ctx).Model(&NCRApproval{}).Where("to_tidak_to ILIKE ?", "%TIDAK TO%")).Count(&tidakToCount)
 
-	// Get department distribution
+	// Helper to exclude Terminated status from chart queries
+	excludeTerminated := func(query *gorm.DB) *gorm.DB {
+		return query.Where("status != ?", "TERMINATED")
+	}
+
+	// Get dilaporkan oleh distribution (using this instead of department)
 	type DeptCount struct {
 		Department string `json:"department"`
 		Count      int64  `json:"count"`
 	}
-	var deptCounts []DeptCount
-	deptQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
-		Select("originator_dept_name as department, count(*) as count").
-		Where("originator_dept_name IS NOT NULL AND originator_dept_name != ''")
-	applyFilters(deptQuery).
-		Group("originator_dept_name").
+	var rawDilaporkanCounts []struct {
+		DilaporkanOleh string
+		Count          int64
+	}
+	dilaporkanQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
+		Select("dilaporkan_oleh, count(*) as count").
+		Where("dilaporkan_oleh IS NOT NULL AND dilaporkan_oleh != ''")
+	excludeTerminated(applyFilters(dilaporkanQuery)).
+		Group("dilaporkan_oleh").
 		Order("count DESC").
-		Limit(10).
-		Scan(&deptCounts)
+		Scan(&rawDilaporkanCounts)
+
+	// Normalize comma-separated values
+	normalizedDilaporkan := make(map[string]int64)
+	for _, dc := range rawDilaporkanCounts {
+		parts := splitAndTrim(dc.DilaporkanOleh)
+		for _, part := range parts {
+			if part != "" {
+				normalizedDilaporkan[part] += dc.Count
+			}
+		}
+	}
+
+	// Convert to slice and sort
+	var deptCounts []DeptCount
+	for name, count := range normalizedDilaporkan {
+		deptCounts = append(deptCounts, DeptCount{
+			Department: name,
+			Count:      count,
+		})
+	}
+	for i := 0; i < len(deptCounts)-1; i++ {
+		for j := i + 1; j < len(deptCounts); j++ {
+			if deptCounts[j].Count > deptCounts[i].Count {
+				deptCounts[i], deptCounts[j] = deptCounts[j], deptCounts[i]
+			}
+		}
+	}
+	if len(deptCounts) > 10 {
+		deptCounts = deptCounts[:10]
+	}
 
 	// Get category distribution (with normalization for comma-separated values)
 	type KategoriCount struct {
@@ -438,7 +500,7 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 	kategoriQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
 		Select("kategori, count(*) as count").
 		Where("kategori IS NOT NULL AND kategori != ''")
-	applyFilters(kategoriQuery).
+	excludeTerminated(applyFilters(kategoriQuery)).
 		Group("kategori").
 		Order("count DESC").
 		Scan(&rawKategoriCounts)
@@ -488,14 +550,14 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 		daysDiff := int(params.EndDate.Sub(*params.StartDate).Hours() / 24)
 		if daysDiff <= 31 {
 			// Group by day
-			applyFilters(trendQuery).
+			excludeTerminated(applyFilters(trendQuery)).
 				Select("TO_CHAR(tanggal, 'YYYY-MM-DD') as month, count(*) as count").
 				Group("TO_CHAR(tanggal, 'YYYY-MM-DD')").
 				Order("month ASC").
 				Scan(&trendData)
 		} else {
 			// Group by month
-			applyFilters(trendQuery).
+			excludeTerminated(applyFilters(trendQuery)).
 				Select("TO_CHAR(tanggal, 'YYYY-MM') as month, count(*) as count").
 				Group("TO_CHAR(tanggal, 'YYYY-MM')").
 				Order("month ASC").
@@ -503,7 +565,7 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 		}
 	} else {
 		// Default: group by month
-		applyFilters(trendQuery).
+		excludeTerminated(applyFilters(trendQuery)).
 			Select("TO_CHAR(tanggal, 'YYYY-MM') as month, count(*) as count").
 			Group("TO_CHAR(tanggal, 'YYYY-MM')").
 			Order("month ASC").
@@ -519,7 +581,7 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 	ditujukanQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
 		Select("ditujukan_kepada, count(*) as count").
 		Where("ditujukan_kepada IS NOT NULL AND ditujukan_kepada != ''")
-	applyFilters(ditujukanQuery).
+	excludeTerminated(applyFilters(ditujukanQuery)).
 		Group("ditujukan_kepada").
 		Order("count DESC").
 		Scan(&rawDitujukanCounts)
@@ -568,7 +630,7 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 	brandQuery := r.db.WithContext(ctx).Model(&NCRApproval{}).
 		Select("nomor_fppp, nomor_production_order, count(*) as count").
 		Where("(nomor_fppp IS NOT NULL AND nomor_fppp != '') OR (nomor_production_order IS NOT NULL AND nomor_production_order != '')")
-	applyFilters(brandQuery).
+	excludeTerminated(applyFilters(brandQuery)).
 		Group("nomor_fppp, nomor_production_order").
 		Order("count DESC").
 		Scan(&rawBrandCounts)
@@ -619,6 +681,7 @@ func (r *Repository) GetStatsWithFilters(ctx context.Context, params StatsParams
 		"total":                    totalCount,
 		"running":                  runningCount,
 		"completed":                completedCount,
+		"terminated":               terminatedCount,
 		"approved":                 agreeCount,
 		"rejected":                 refuseCount,
 		"to":                       toCount,

@@ -162,6 +162,7 @@ func ExtractKeywords(text string) []string {
 		"saat": true, "setelah": true, "harus": true, "menjadi": true, "seperti": true,
 		"tersebut": true, "belum": true, "sehingga": true, "namun": true, "bila": true,
 		"apabila": true, "bahwa": true, "yaitu": true, "antara": true, "tetapi": true,
+		"tapi": true,
 	}
 
 	words := strings.Fields(strings.ToLower(text))
@@ -220,10 +221,10 @@ func CountWordFrequencies(texts []string, limit int) []WordFrequency {
 	return freqs
 }
 
-// ExtractKeyPhrase extracts 2-4 most important words from a text to create a concise summary
+// ExtractKeyPhrase extracts 2-5 most important words from a text to create a concise summary
 func ExtractKeyPhrase(text string, maxWords int) string {
 	if maxWords <= 0 {
-		maxWords = 4
+		maxWords = 5
 	}
 
 	// Important domain-specific words that should be prioritized
@@ -298,7 +299,7 @@ func ExtractKeyPhrase(text string, maxWords int) string {
 	return strings.Join(result, " ")
 }
 
-// GetClusterSummary extracts a 2-4 word summary from multiple problem descriptions in a cluster
+// GetClusterSummary extracts a 2-5 word summary from multiple problem descriptions in a cluster
 func GetClusterSummary(descriptions []string, maxWords int) string {
 	if len(descriptions) == 0 {
 		return ""

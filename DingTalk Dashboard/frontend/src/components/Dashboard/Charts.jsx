@@ -329,7 +329,7 @@ const Charts = ({ stats, dateFilter }) => {
 
             <div className="chart-card light animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 <div className="chart-card-header">
-                    <h3>By Department</h3>
+                    <h3>Dilaporkan Oleh</h3>
                     {hasDateFilter && (
                         <span className="date-filter-badge">Filtered</span>
                     )}
