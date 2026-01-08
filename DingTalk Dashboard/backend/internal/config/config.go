@@ -25,6 +25,10 @@ type Config struct {
 	JWTSecret       string
 	JWTAccessSecret string
 
+	// Ollama (Local LLM)
+	OllamaBaseURL string
+	OllamaModel   string
+
 	// Timezone
 	Location *time.Location
 }
@@ -49,6 +53,8 @@ func Load() (*Config, error) {
 		AuthAPIBaseURL:      getEnv("AUTH_API_BASE_URL", "https://api-incoming.ws-allure.com"),
 		JWTSecret:           os.Getenv("JWT_SECRET"),
 		JWTAccessSecret:     os.Getenv("JWT_ACCESS_SECRET"),
+		OllamaBaseURL:       getEnv("OLLAMA_BASE_URL", "http://localhost:11434"),
+		OllamaModel:         getEnv("OLLAMA_MODEL", "llama3.2:3b"),
 		Location:            loc,
 	}, nil
 }

@@ -8,6 +8,7 @@ import FilterPanel from '../components/Dashboard/FilterPanel';
 import ProblemRanking from '../components/Dashboard/ProblemRanking';
 import WordCloud from '../components/Dashboard/WordCloud';
 import ApprovalDetail from '../components/Dashboard/ApprovalDetail';
+import AIInsightsModal, { AIHeaderButton } from '../components/Dashboard/AIInsightsModal';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -19,6 +20,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [selectedApproval, setSelectedApproval] = useState(null);
+    const [aiModalOpen, setAiModalOpen] = useState(false);
 
     // Get current month date range
     const getCurrentMonthRange = () => {
@@ -224,6 +226,7 @@ const Dashboard = () => {
                             </>
                         )}
                     </button>
+                    <AIHeaderButton onClick={() => setAiModalOpen(true)} />
                     <div className="user-menu">
                         <span className="text-secondary text-sm">{user?.email}</span>
                         <button className="btn btn-secondary btn-sm" onClick={logout}>
@@ -293,6 +296,21 @@ const Dashboard = () => {
                     onClose={() => setSelectedApproval(null)}
                 />
             )}
+
+            {/* AI Insights Modal */}
+            <AIInsightsModal
+                isOpen={aiModalOpen}
+                onClose={() => setAiModalOpen(false)}
+                filters={{
+                    startDate: filters.start_date,
+                    endDate: filters.end_date,
+                    department: filters.department,
+                    ditujukanKepada: filters.ditujukan_kepada,
+                    dilaporkanOleh: filters.dilaporkan_oleh,
+                    kategori: filters.kategori,
+                    status: filters.status,
+                }}
+            />
         </div>
     );
 };

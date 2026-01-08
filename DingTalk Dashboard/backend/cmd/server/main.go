@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"dingtalk-dashboard/internal/ai"
 	"dingtalk-dashboard/internal/config"
 	"dingtalk-dashboard/internal/database"
 	"dingtalk-dashboard/internal/dingtalk"
@@ -84,6 +85,12 @@ func main() {
 	rankingHandler := handler.NewRankingHandler(rankingService)
 	exportHandler := handler.NewExportHandler(approvalService)
 
+	// Initialize AI components
+	ollamaClient := ai.NewOllamaClient(cfg.OllamaBaseURL, cfg.OllamaModel)
+	aiService := ai.NewService(ollamaClient, approvalRepo, zapLogger)
+	aiHandler := handler.NewAIHandler(aiService)
+	zapLogger.Info("AI service initialized", zap.String("ollama_url", cfg.OllamaBaseURL), zap.String("model", cfg.OllamaModel))
+
 	// Determine JWT secret (prefer JWT_ACCESS_SECRET, fallback to JWT_SECRET)
 	jwtSecret := cfg.JWTAccessSecret
 	if jwtSecret == "" {
@@ -123,6 +130,14 @@ func main() {
 	}
 	sync.Get("/logs", approvalHandler.ListSyncLogs)
 	sync.Post("/trigger", approvalHandler.TriggerSync)
+
+	// AI routes (protected)
+	aiRoutes := v1.Group("/ai")
+	if jwtSecret != "" {
+		aiRoutes.Use(authMiddleware.Authenticate())
+	}
+	aiRoutes.Get("/insights", aiHandler.GetInsights)
+	aiRoutes.Get("/health", aiHandler.CheckHealth)
 
 	// Graceful shutdown
 	go func() {
